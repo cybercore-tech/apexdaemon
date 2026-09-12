@@ -21,17 +21,35 @@ post_hooks = []
 interval_secs = 60
 restart_backoff_secs = 300
 
+# cyberdeck and its diagnostics deck are already systemd system units
+# (/etc/systemd/system/cyberdeck.service, cyberdeck-diag-deck.service)
+# with their own Restart=on-failure — systemd itself already self-heals
+# these. Restarting a *system* unit needs sudo, which is not NOPASSWD
+# here (`sudo -l` confirms only a short allowlist is passwordless, and
+# systemctl isn't in it) — a headless daemon must never assume a sudo
+# prompt will be answered, so these are alert-only via a systemd-unit
+# check, same as vortexwall below, rather than given a start_cmd.
 [[fleet_health.services]]
 name = "cyberdeck"
-check = "tcp"
-addr = "127.0.0.1:8080"
-start_cmd = "cyberdeck"
+check = "systemd-unit"
+unit = "cyberdeck"
 
 [[fleet_health.services]]
-name = "cyberdesk"
+name = "cyberdeck-diag-deck"
+check = "systemd-unit"
+unit = "cyberdeck-diag-deck"
+
+# The *other* cyberdesk instance — the darknotes portal on :8765 — has no
+# systemd unit at all, unlike its :8766 diagnostics sibling above. Nothing
+# currently restarts it if it dies, which is exactly the gap start_cmd is
+# for. Full path, not a bare command: neither cyberdeck nor cyberdesk are
+# on $PATH today (they live in the shared ~/.cargo-target build dir), and
+# `sh -c` expands `~` fine even non-interactively.
+[[fleet_health.services]]
+name = "cyberdesk-darknotes"
 check = "http"
 url = "http://127.0.0.1:8765/healthz"
-start_cmd = "cyberdesk"
+start_cmd = "~/.cargo-target/release/cyberdesk"
 
 [[fleet_health.services]]
 name = "vortexwall"
