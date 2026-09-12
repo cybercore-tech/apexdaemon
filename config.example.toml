@@ -1,0 +1,57 @@
+# Copy to ~/.config/apexdaemon/config.toml and edit. Every field shown
+# here is also the built-in default — an absent file, or an empty one,
+# runs every plugin with these same values.
+
+[general]
+notify = true   # desktop notifications via notify-send, best-effort
+
+[plugins]
+theme_sync = true
+fleet_health = true
+security = true
+vault_backup = true
+repo_housekeeping = true
+
+[theme_sync]
+cybercore_root = "~/.sysops/cybercore"
+family = "omarchy-live"   # kept separate from the 72 hand-curated themes
+post_hooks = []
+
+[fleet_health]
+interval_secs = 60
+restart_backoff_secs = 300
+
+[[fleet_health.services]]
+name = "cyberdeck"
+check = "tcp"
+addr = "127.0.0.1:8080"
+start_cmd = "cyberdeck"
+
+[[fleet_health.services]]
+name = "cyberdesk"
+check = "http"
+url = "http://127.0.0.1:8765/healthz"
+start_cmd = "cyberdesk"
+
+[[fleet_health.services]]
+name = "vortexwall"
+check = "systemd-unit"
+unit = "vortexwall"
+# no start_cmd: alert-only, see [security] below for why
+
+[security]
+interval_secs = 120
+unit = "vortexwall"   # swap to "fail2ban" here later — no code change needed
+
+[vault_backup]
+interval_secs = 1800
+path = "~/Vaults/darknotes"
+push = false   # flip on once an ssh-agent is reliably loaded in your session
+
+[repo_housekeeping]
+interval_secs = 3600
+cyberfleet_config = "~/.config/cyberfleet/config.json"   # reused if present
+roots = []   # fallback only, used if cyberfleet_config doesn't exist
+watch_prs = [
+  # "darkstardevx/OmNote#4",
+]
