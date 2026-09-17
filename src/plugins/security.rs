@@ -48,6 +48,21 @@ async fn run(ctx: Context) -> anyhow::Result<()> {
     }
 }
 
+/// The notification body for a real unit-status transition, or `None`
+/// if nothing worth alerting on happened. Pure decision logic, split
+/// out from the real `systemctl`/state-store I/O around it so the
+/// transition rules (only fire on an actual edge, not every tick) are
+/// directly unit-testable.
+fn transition_message(was_active: Option<bool>, active: bool, unit: &str) -> Option<String> {
+    match (was_active, active) {
+        (Some(true), false) | (None, false) => Some(format!(
+            "{unit} is not active — auth-failure banning is not running"
+        )),
+        (Some(false), true) => Some(format!("{unit} is active again")),
+        _ => None,
+    }
+}
+
 async fn check_unit_status(ctx: Context, unit: String) -> anyhow::Result<()> {
     let active = tokio::process::Command::new("systemctl")
         .args(["is-active", "--quiet", &unit])
@@ -62,20 +77,8 @@ async fn check_unit_status(ctx: Context, unit: String) -> anyhow::Result<()> {
     // Only notify on an actual transition, not on every tick — otherwise
     // "the firewall daemon is down" becomes background noise the moment
     // it stays down for more than one interval.
-    match (was_active, active) {
-        (Some(true), false) | (None, false) => {
-            ctx.notifier.send(
-                "ApexDaemon: security watch",
-                &format!("{unit} is not active — auth-failure banning is not running"),
-            );
-        }
-        (Some(false), true) => {
-            ctx.notifier.send(
-                "ApexDaemon: security watch",
-                &format!("{unit} is active again"),
-            );
-        }
-        _ => {}
+    if let Some(body) = transition_message(was_active, active, &unit) {
+        ctx.notifier.send("ApexDaemon: security watch", &body);
     }
 
     ctx.state.set(&key, serde_json::Value::Bool(active));
@@ -108,12 +111,69 @@ async fn tail_bans(ctx: Context, unit: String) -> anyhow::Result<()> {
             // (threshold <t> reached)` — surface those as-is rather than
             // re-parsing the IP back out, so the notification always
             // matches whatever vortexwall actually decided to log.
-            if line.contains("[BANNED]") {
+            if is_ban_line(&line) {
                 ctx.notifier.send("ApexDaemon: IP banned", &line);
             }
         }
 
         eprintln!("[security] journalctl for {unit} exited — restarting in 10s");
         tokio::time::sleep(Duration::from_secs(10)).await;
+    }
+}
+
+/// Whether a real journal line is vortexwall's own ban-confirmation
+/// line. This is the third independent reimplementation of "watch a
+/// journal for ban lines" across this fleet (VortexWall's own
+/// detector, then ghostport-firewall's) — kept a real, tested,
+/// standalone function this time rather than an inline check with no
+/// coverage.
+fn is_ban_line(line: &str) -> bool {
+    line.contains("[BANNED]")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recognizes_a_real_vortexwall_ban_line() {
+        assert!(is_ban_line(
+            "[BANNED] 198.51.100.7 for 3600s (threshold 5 reached)"
+        ));
+    }
+
+    #[test]
+    fn ignores_unrelated_lines() {
+        assert!(!is_ban_line("[watch] tailing journal for sshd"));
+        assert!(!is_ban_line(
+            "[protected] 127.0.0.1 is loopback, never a ban candidate"
+        ));
+        assert!(!is_ban_line(""));
+    }
+
+    #[test]
+    fn newly_inactive_unit_produces_an_alert() {
+        assert_eq!(
+            transition_message(None, false, "vortexwall").as_deref(),
+            Some("vortexwall is not active — auth-failure banning is not running")
+        );
+        assert_eq!(
+            transition_message(Some(true), false, "vortexwall").as_deref(),
+            Some("vortexwall is not active — auth-failure banning is not running")
+        );
+    }
+
+    #[test]
+    fn recovering_unit_produces_a_recovery_alert() {
+        assert_eq!(
+            transition_message(Some(false), true, "vortexwall").as_deref(),
+            Some("vortexwall is active again")
+        );
+    }
+
+    #[test]
+    fn steady_state_produces_no_alert() {
+        assert_eq!(transition_message(Some(true), true, "vortexwall"), None);
+        assert_eq!(transition_message(Some(false), false, "vortexwall"), None);
     }
 }

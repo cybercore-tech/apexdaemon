@@ -68,12 +68,11 @@ async fn check_one(ctx: &Context, svc: &WatchedService) {
     let backoff_key = format!("fleet_health_last_restart_{}", svc.name);
     let backoff_secs = ctx.config.fleet_health.restart_backoff_secs;
     let now = chrono::Utc::now().timestamp();
-    if let Some(last) = ctx.state.get(&backoff_key).and_then(|v| v.as_i64()) {
-        if now - last < backoff_secs as i64 {
-            // Already attempted a restart recently — don't hammer a
-            // service that's down for a real reason.
-            return;
-        }
+    let last_attempt = ctx.state.get(&backoff_key).and_then(|v| v.as_i64());
+    if !should_attempt_restart(last_attempt, now, backoff_secs) {
+        // Already attempted a restart recently — don't hammer a
+        // service that's down for a real reason.
+        return;
     }
 
     if ctx.dry_run {
@@ -142,4 +141,40 @@ async fn check_systemd_unit(unit: &str) -> bool {
         .await
         .map(|s| s.success())
         .unwrap_or(false)
+}
+
+/// Whether enough time has passed since the last restart attempt (if
+/// any) to try again. Pure decision logic, split out from the real
+/// state-store read around it so the backoff rule itself is directly
+/// unit-testable without needing a real `StateStore`.
+fn should_attempt_restart(last_attempt: Option<i64>, now: i64, backoff_secs: u64) -> bool {
+    match last_attempt {
+        None => true,
+        Some(last) => now - last >= backoff_secs as i64,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn no_prior_attempt_always_allows_a_restart() {
+        assert!(should_attempt_restart(None, 1_000, 300));
+    }
+
+    #[test]
+    fn within_the_backoff_window_is_refused() {
+        assert!(!should_attempt_restart(Some(1_000), 1_100, 300));
+    }
+
+    #[test]
+    fn exactly_at_the_backoff_boundary_is_allowed() {
+        assert!(should_attempt_restart(Some(1_000), 1_300, 300));
+    }
+
+    #[test]
+    fn well_past_the_backoff_window_is_allowed() {
+        assert!(should_attempt_restart(Some(1_000), 10_000, 300));
+    }
 }
