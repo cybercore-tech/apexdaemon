@@ -3,6 +3,7 @@ name = "apexdaemon"
 version = "0.1.0"
 edition = "2021"
 description = "Plugin-style background automation daemon: theme sync, fleet health, security watch, vault backup, repo housekeeping"
+license = "MIT"
 
 [[bin]]
 name = "apexdaemon"
@@ -18,4 +19,4 @@ anyhow = "1"
 notify = "6"
 git2 = "0.19"
 chrono = { version = "0.4", features = ["serde"] }
-cybercore = { path = "/home/raven/.sysops/cybercore" }
+cybercore = "0.4"
