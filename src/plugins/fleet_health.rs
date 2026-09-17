@@ -57,7 +57,10 @@ async fn check_one(ctx: &Context, svc: &WatchedService) {
     let Some(start_cmd) = &svc.start_cmd else {
         ctx.notifier.send(
             "ApexDaemon: service down",
-            &format!("{} failed its health check (no start_cmd configured — alert only)", svc.name),
+            &format!(
+                "{} failed its health check (no start_cmd configured — alert only)",
+                svc.name
+            ),
         );
         return;
     };
@@ -74,7 +77,10 @@ async fn check_one(ctx: &Context, svc: &WatchedService) {
     }
 
     if ctx.dry_run {
-        println!("[fleet-health] (dry-run) would run start_cmd for {}: {start_cmd}", svc.name);
+        println!(
+            "[fleet-health] (dry-run) would run start_cmd for {}: {start_cmd}",
+            svc.name
+        );
         return;
     }
 
@@ -95,17 +101,26 @@ async fn check_one(ctx: &Context, svc: &WatchedService) {
             // not kill the process (Rust's `Child` isn't killed on drop),
             // so this is a genuine fire-and-forget launch whether or not
             // `start_cmd` backgrounds itself.
-            ctx.notifier.send("ApexDaemon: service restarted", &format!("started {}", svc.name));
+            ctx.notifier.send(
+                "ApexDaemon: service restarted",
+                &format!("started {}", svc.name),
+            );
         }
         Err(e) => {
-            ctx.notifier.send("ApexDaemon: restart failed", &format!("{} start_cmd failed: {e}", svc.name));
+            ctx.notifier.send(
+                "ApexDaemon: restart failed",
+                &format!("{} start_cmd failed: {e}", svc.name),
+            );
         }
     }
 }
 
 async fn check_tcp(addr: &str) -> bool {
     let connect = tokio::net::TcpStream::connect(addr);
-    matches!(tokio::time::timeout(Duration::from_secs(3), connect).await, Ok(Ok(_)))
+    matches!(
+        tokio::time::timeout(Duration::from_secs(3), connect).await,
+        Ok(Ok(_))
+    )
 }
 
 async fn check_http(url: &str) -> bool {

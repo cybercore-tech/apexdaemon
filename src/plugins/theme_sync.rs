@@ -82,7 +82,10 @@ fn state_theme_dir() -> PathBuf {
 async fn run(ctx: Context) -> anyhow::Result<()> {
     let watch_root = state_theme_dir();
     if !watch_root.exists() {
-        anyhow::bail!("{} does not exist — is this an Omarchy system?", watch_root.display());
+        anyhow::bail!(
+            "{} does not exist — is this an Omarchy system?",
+            watch_root.display()
+        );
     }
 
     // Sync once immediately, so a theme switch that happened while
@@ -116,7 +119,8 @@ async fn run(ctx: Context) -> anyhow::Result<()> {
 
         if let Err(e) = sync_once(&ctx).await {
             eprintln!("[theme-sync] sync failed: {e:#}");
-            ctx.notifier.send("ApexDaemon: theme sync failed", &format!("{e:#}"));
+            ctx.notifier
+                .send("ApexDaemon: theme sync failed", &format!("{e:#}"));
         }
     }
 }
@@ -157,7 +161,8 @@ async fn sync_once(ctx: &Context) -> anyhow::Result<()> {
             "[theme-sync] (dry-run) would sync theme '{name}' -> cybercore family '{}'",
             ctx.config.theme_sync.family
         );
-        ctx.state.set("theme_sync_last", serde_json::Value::String(fingerprint));
+        ctx.state
+            .set("theme_sync_last", serde_json::Value::String(fingerprint));
         return Ok(());
     }
 
@@ -188,7 +193,10 @@ async fn sync_once(ctx: &Context) -> anyhow::Result<()> {
     let output = run_result?;
 
     if !output.status.success() {
-        anyhow::bail!("ansi2cybergrid.py failed: {}", String::from_utf8_lossy(&output.stderr));
+        anyhow::bail!(
+            "ansi2cybergrid.py failed: {}",
+            String::from_utf8_lossy(&output.stderr)
+        );
     }
 
     for hook in &ctx.config.theme_sync.post_hooks {
@@ -197,7 +205,8 @@ async fn sync_once(ctx: &Context) -> anyhow::Result<()> {
         }
     }
 
-    ctx.state.set("theme_sync_last", serde_json::Value::String(fingerprint));
+    ctx.state
+        .set("theme_sync_last", serde_json::Value::String(fingerprint));
     ctx.notifier.send(
         "ApexDaemon: theme synced",
         &format!(

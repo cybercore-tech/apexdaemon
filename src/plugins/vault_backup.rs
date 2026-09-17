@@ -64,7 +64,10 @@ async fn backup_once(ctx: &Context) -> anyhow::Result<()> {
         .output()
         .await?;
     if !status.status.success() {
-        anyhow::bail!("git status failed: {}", String::from_utf8_lossy(&status.stderr));
+        anyhow::bail!(
+            "git status failed: {}",
+            String::from_utf8_lossy(&status.stderr)
+        );
     }
     let porcelain = String::from_utf8_lossy(&status.stdout);
     if !is_dirty(&porcelain) {
@@ -73,13 +76,24 @@ async fn backup_once(ctx: &Context) -> anyhow::Result<()> {
 
     let file_count = porcelain.lines().count();
     if ctx.dry_run {
-        println!("[vault-backup] (dry-run) would commit {file_count} changed path(s) in {}", path.display());
+        println!(
+            "[vault-backup] (dry-run) would commit {file_count} changed path(s) in {}",
+            path.display()
+        );
         return Ok(());
     }
 
-    Command::new("git").arg("-C").arg(&path).args(["add", "-A"]).status().await?;
+    Command::new("git")
+        .arg("-C")
+        .arg(&path)
+        .args(["add", "-A"])
+        .status()
+        .await?;
 
-    let message = format!("auto: backup {}", chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC"));
+    let message = format!(
+        "auto: backup {}",
+        chrono::Utc::now().format("%Y-%m-%d %H:%M:%S UTC")
+    );
     let commit = Command::new("git")
         .arg("-C")
         .arg(&path)
@@ -87,10 +101,16 @@ async fn backup_once(ctx: &Context) -> anyhow::Result<()> {
         .output()
         .await?;
     if !commit.status.success() {
-        anyhow::bail!("git commit failed: {}", String::from_utf8_lossy(&commit.stderr));
+        anyhow::bail!(
+            "git commit failed: {}",
+            String::from_utf8_lossy(&commit.stderr)
+        );
     }
     println!("[vault-backup] committed {file_count} changed path(s): {message}");
-    ctx.notifier.send("ApexDaemon: vault backed up", &format!("{file_count} path(s) committed"));
+    ctx.notifier.send(
+        "ApexDaemon: vault backed up",
+        &format!("{file_count} path(s) committed"),
+    );
 
     if !ctx.config.vault_backup.push {
         return Ok(());

@@ -70,7 +70,10 @@ async fn check_unit_status(ctx: Context, unit: String) -> anyhow::Result<()> {
             );
         }
         (Some(false), true) => {
-            ctx.notifier.send("ApexDaemon: security watch", &format!("{unit} is active again"));
+            ctx.notifier.send(
+                "ApexDaemon: security watch",
+                &format!("{unit} is active again"),
+            );
         }
         _ => {}
     }

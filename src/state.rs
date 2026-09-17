@@ -22,7 +22,10 @@ impl StateStore {
             .ok()
             .and_then(|s| serde_json::from_str(&s).ok())
             .unwrap_or_default();
-        Self { path, data: Arc::new(Mutex::new(data)) }
+        Self {
+            path,
+            data: Arc::new(Mutex::new(data)),
+        }
     }
 
     pub fn get(&self, key: &str) -> Option<Value> {

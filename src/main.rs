@@ -117,10 +117,22 @@ async fn main() -> ExitCode {
     };
 
     let registry: Vec<(bool, Arc<dyn Plugin>)> = vec![
-        (app_config.plugins.theme_sync, Arc::new(plugins::theme_sync::ThemeSyncPlugin)),
-        (app_config.plugins.fleet_health, Arc::new(plugins::fleet_health::FleetHealthPlugin)),
-        (app_config.plugins.security, Arc::new(plugins::security::SecurityPlugin)),
-        (app_config.plugins.vault_backup, Arc::new(plugins::vault_backup::VaultBackupPlugin)),
+        (
+            app_config.plugins.theme_sync,
+            Arc::new(plugins::theme_sync::ThemeSyncPlugin),
+        ),
+        (
+            app_config.plugins.fleet_health,
+            Arc::new(plugins::fleet_health::FleetHealthPlugin),
+        ),
+        (
+            app_config.plugins.security,
+            Arc::new(plugins::security::SecurityPlugin),
+        ),
+        (
+            app_config.plugins.vault_backup,
+            Arc::new(plugins::vault_backup::VaultBackupPlugin),
+        ),
         (
             app_config.plugins.repo_housekeeping,
             Arc::new(plugins::repo_housekeeping::RepoHousekeepingPlugin),
@@ -129,7 +141,11 @@ async fn main() -> ExitCode {
 
     if args.list_plugins {
         for (enabled, p) in &registry {
-            println!("{:<20} {}", p.name(), if *enabled { "enabled" } else { "disabled" });
+            println!(
+                "{:<20} {}",
+                p.name(),
+                if *enabled { "enabled" } else { "disabled" }
+            );
         }
         return ExitCode::SUCCESS;
     }
@@ -150,7 +166,11 @@ async fn main() -> ExitCode {
 
     println!(
         "[ApexDaemon] starting with plugins: {}",
-        enabled.iter().map(|p| p.name()).collect::<Vec<_>>().join(", ")
+        enabled
+            .iter()
+            .map(|p| p.name())
+            .collect::<Vec<_>>()
+            .join(", ")
     );
 
     let mut handles = Vec::new();
@@ -193,10 +213,16 @@ async fn supervise(p: Arc<dyn Plugin>, ctx: Context) {
         let name = p.name();
         match p.run(ctx.clone()).await {
             Ok(()) => {
-                eprintln!("[{name}] exited cleanly (unexpected) — restarting in {}s", backoff.as_secs());
+                eprintln!(
+                    "[{name}] exited cleanly (unexpected) — restarting in {}s",
+                    backoff.as_secs()
+                );
             }
             Err(e) => {
-                eprintln!("[{name}] failed: {e:#} — restarting in {}s", backoff.as_secs());
+                eprintln!(
+                    "[{name}] failed: {e:#} — restarting in {}s",
+                    backoff.as_secs()
+                );
             }
         }
         tokio::time::sleep(backoff).await;

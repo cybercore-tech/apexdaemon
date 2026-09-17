@@ -312,8 +312,14 @@ mod tests {
         assert!(plain_default.plugins.security);
         assert!(plain_default.plugins.vault_backup);
         assert!(plain_default.plugins.repo_housekeeping);
-        assert_eq!(from_empty_toml.plugins.theme_sync, plain_default.plugins.theme_sync);
-        assert_eq!(from_empty_toml.plugins.security, plain_default.plugins.security);
+        assert_eq!(
+            from_empty_toml.plugins.theme_sync,
+            plain_default.plugins.theme_sync
+        );
+        assert_eq!(
+            from_empty_toml.plugins.security,
+            plain_default.plugins.security
+        );
     }
 
     #[test]
@@ -360,17 +366,32 @@ mod tests {
         "#;
         let cfg: AppConfig = toml::from_str(toml_str).unwrap();
         assert_eq!(cfg.fleet_health.services.len(), 3);
-        assert!(matches!(cfg.fleet_health.services[0].check, HealthCheck::Tcp { .. }));
-        assert!(matches!(cfg.fleet_health.services[1].check, HealthCheck::Http { .. }));
-        assert!(matches!(cfg.fleet_health.services[2].check, HealthCheck::SystemdUnit { .. }));
-        assert_eq!(cfg.fleet_health.services[0].start_cmd.as_deref(), Some("cyberdeck"));
+        assert!(matches!(
+            cfg.fleet_health.services[0].check,
+            HealthCheck::Tcp { .. }
+        ));
+        assert!(matches!(
+            cfg.fleet_health.services[1].check,
+            HealthCheck::Http { .. }
+        ));
+        assert!(matches!(
+            cfg.fleet_health.services[2].check,
+            HealthCheck::SystemdUnit { .. }
+        ));
+        assert_eq!(
+            cfg.fleet_health.services[0].start_cmd.as_deref(),
+            Some("cyberdeck")
+        );
         assert_eq!(cfg.fleet_health.services[1].start_cmd, None);
     }
 
     #[test]
     fn expand_home_handles_tilde_and_plain_paths() {
         std::env::set_var("HOME", "/home/testuser");
-        assert_eq!(expand_home("~/Vaults/darknotes"), PathBuf::from("/home/testuser/Vaults/darknotes"));
+        assert_eq!(
+            expand_home("~/Vaults/darknotes"),
+            PathBuf::from("/home/testuser/Vaults/darknotes")
+        );
         assert_eq!(expand_home("/etc/passwd"), PathBuf::from("/etc/passwd"));
     }
 }

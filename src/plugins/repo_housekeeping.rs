@@ -65,10 +65,17 @@ fn discover_repos(ctx: &Context) -> Vec<PathBuf> {
         .and_then(|s| serde_json::from_str::<CyberfleetConfig>(&s).ok())
     {
         Some(cfg) if !cfg.roots.is_empty() => {
-            println!("[repo-housekeeping] using repo roots from {}", cyberfleet_path.display());
+            println!(
+                "[repo-housekeeping] using repo roots from {}",
+                cyberfleet_path.display()
+            );
             (cfg.roots, cfg.ignore, cfg.max_depth)
         }
-        _ => (ctx.config.repo_housekeeping.roots.clone(), vec![], default_depth()),
+        _ => (
+            ctx.config.repo_housekeeping.roots.clone(),
+            vec![],
+            default_depth(),
+        ),
     };
 
     let mut repos = Vec::new();
@@ -87,7 +94,9 @@ fn walk(dir: &Path, depth_left: usize, ignore: &[String], out: &mut Vec<PathBuf>
     if depth_left == 0 {
         return;
     }
-    let Ok(entries) = std::fs::read_dir(dir) else { return };
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
     for entry in entries.flatten() {
         let path = entry.path();
         if !path.is_dir() {
@@ -111,7 +120,9 @@ fn local_status(path: &Path) -> anyhow::Result<(usize, usize, usize)> {
     let repo = Repository::open(path)?;
 
     let mut opts = StatusOptions::new();
-    opts.include_untracked(true).recurse_untracked_dirs(false).include_ignored(false);
+    opts.include_untracked(true)
+        .recurse_untracked_dirs(false)
+        .include_ignored(false);
     let dirty = repo.statuses(Some(&mut opts))?.len();
 
     let (ahead, behind) = ahead_behind(&repo).unwrap_or((0, 0));
@@ -154,7 +165,10 @@ async fn tick(ctx: &Context) -> anyhow::Result<()> {
         }
         match local_status(repo) {
             Ok((dirty, ahead, behind)) if dirty > 0 || ahead > 0 || behind > 0 => {
-                let name = repo.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+                let name = repo
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
                 let mut parts = Vec::new();
                 if dirty > 0 {
                     parts.push(format!("{dirty} dirty"));
@@ -173,13 +187,20 @@ async fn tick(ctx: &Context) -> anyhow::Result<()> {
     }
 
     if !needs_attention.is_empty() {
-        println!("[repo-housekeeping] {} repo(s) need attention:", needs_attention.len());
+        println!(
+            "[repo-housekeeping] {} repo(s) need attention:",
+            needs_attention.len()
+        );
         for line in &needs_attention {
             println!("  {line}");
         }
         ctx.notifier.send(
             "ApexDaemon: repos need attention",
-            &format!("{} repo(s): {}", needs_attention.len(), needs_attention.join("; ")),
+            &format!(
+                "{} repo(s): {}",
+                needs_attention.len(),
+                needs_attention.join("; ")
+            ),
         );
     }
 
@@ -199,7 +220,12 @@ async fn check_watched_prs(ctx: &Context) -> anyhow::Result<()> {
         };
 
         let output = Command::new("gh")
-            .args(["api", &format!("repos/{repo}/issues/{number}"), "--jq", ".state"])
+            .args([
+                "api",
+                &format!("repos/{repo}/issues/{number}"),
+                "--jq",
+                ".state",
+            ])
             .output()
             .await;
         let Ok(output) = output else { continue };
@@ -237,7 +263,10 @@ mod tests {
 
     #[test]
     fn parses_owner_repo_hash_number() {
-        assert_eq!(parse_watch_spec("darkstardevx/OmNote#4"), Some(("darkstardevx/OmNote", "4")));
+        assert_eq!(
+            parse_watch_spec("darkstardevx/OmNote#4"),
+            Some(("darkstardevx/OmNote", "4"))
+        );
     }
 
     #[test]
@@ -263,7 +292,8 @@ mod tests {
 
     #[test]
     fn walk_skips_ignored_directory_names() {
-        let base = std::env::temp_dir().join(format!("apexd-walk-ignore-test-{}", std::process::id()));
+        let base =
+            std::env::temp_dir().join(format!("apexd-walk-ignore-test-{}", std::process::id()));
         let ignored_repo = base.join("node_modules").join("proj");
         std::fs::create_dir_all(ignored_repo.join(".git")).unwrap();
 
