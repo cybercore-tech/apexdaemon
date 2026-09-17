@@ -10,37 +10,41 @@ Restart=on-failure
 RestartSec=5
 TimeoutStopSec=10
 
-# Sandboxing, deliberately bounded. Unlike ghostport-firewall's small
-# fixed footprint, this daemon's whole job is broad read/write access
-# under $HOME (vault commits, repo fetches, theme file writes) plus
-# running arbitrary user-configured shell commands (start_cmd,
-# post_hooks) whose real needs -- network access, syscalls, address
-# families -- can't be predicted ahead of time. Seccomp-based
-# restrictions carry across execve to every spawned child, not just
-# this process itself (confirmed the hard way via ghostport-firewall's
-# own AF_NETLINK requirement), so guessing here would risk silently
-# breaking a user's own hooks rather than actually hardening anything.
+# No systemd sandboxing directives on this unit -- verified live, not
+# guessed. This machine routes every `ssh` invocation through a
+# setuid-root firejail wrapper (/usr/local/bin/ssh -> firejail), which
+# repo-housekeeping's `git fetch` and vault-backup's `git push` both
+# depend on, and firejail cannot run inside ANY of the directives that
+# would otherwise be safe defaults for a --user unit:
 #
-# Deliberately NOT applied:
-#   ProtectHome            -- would break the vault-backup/
-#                             repo-housekeeping write access that is
-#                             this daemon's actual purpose.
-#   RestrictAddressFamilies -- fleet_health's check_http shells out to
-#                             curl, and arbitrary start_cmd/post_hooks
-#                             may need real networking of their own.
-#   MemoryDenyWriteExecute  -- python3/git/gh aren't proven safe under
-#                             it, and breaking a user's own post_hooks
-#                             silently outweighs the benefit here.
+#   - LockPersonality=yes and RestrictRealtime=yes are both
+#     implemented via an unprivileged seccomp filter, which the kernel
+#     will only install if the process's NoNewPrivs bit is already
+#     set -- confirmed directly (`systemd-run --user
+#     --property=LockPersonality=yes -- grep NoNewPrivs
+#     /proc/self/status` reports `1`, even though `systemctl show -p
+#     NoNewPrivileges` on that same unit reports `no`). That kernel-
+#     level bit, not the systemd property, is what blocks firejail's
+#     setuid bit from taking effect, and firejail then fails outright
+#     ("cannot create a lockfile at /run/firejail/firejail-run.lock:
+#     Permission denied").
+#   - ProtectKernelTunables=yes, ProtectKernelModules=yes, and
+#     ProtectControlGroups=yes each build a private mount namespace
+#     for the unit; inside it firejail's own root-ownership checks
+#     fail a different way ("create_empty_dir_as_root: Assertion
+#     `s.st_uid == 0' failed") -- confirmed the same way, one
+#     directive at a time.
+#   - NoNewPrivileges=yes itself is the most direct case: it blocks
+#     the setuid bit from taking effect on exec at all.
 #
-# Applied for real -- true regardless of what a given start_cmd does,
-# because this process (and anything sane it spawns) never
-# legitimately needs any of these:
-NoNewPrivileges=true
-ProtectKernelTunables=true
-ProtectKernelModules=true
-ProtectControlGroups=true
-LockPersonality=true
-RestrictRealtime=true
+# Every one of these was tested individually against this host's real
+# `ssh` before being ruled out -- this isn't a blanket "sandboxing is
+# scary" decision, it's specific to running as an unprivileged --user
+# unit on a machine that wraps ssh in a setuid sandbox. Whether a
+# --system unit (with real CAP_SYS_ADMIN available) would avoid this
+# is untested and not assumed either way. Breaking every git operation
+# this daemon exists to do is a worse outcome than the hardening these
+# directives would have bought on a single-user desktop.
 
 [Install]
 WantedBy=default.target

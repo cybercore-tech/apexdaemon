@@ -41,17 +41,31 @@ doesn't — read this before pointing it at anything that matters.
   ApexDaemon assumes the machine it runs on isn't already compromised.
   It doesn't defend against a local attacker with access to the
   running process, its config, or its state file.
-- **`start_cmd`/`post_hooks` under systemd sandboxing.** The bounded
-  hardening in `apexdaemon.service` (see below) is deliberately *not*
-  the same strength as GhostPort's — because this daemon's whole
-  purpose is broad `$HOME` write access plus running commands whose
-  real needs (networking, memory-mapping, address families) can't be
-  predicted ahead of time, `ProtectHome`, `RestrictAddressFamilies`,
-  and `MemoryDenyWriteExecute` are intentionally left off. A malicious
-  `start_cmd`/`post_hook` is not something the unit file tries to
-  contain; only "this process and anything sane it spawns never needs
-  kernel-tunable/kernel-module/cgroup access or realtime scheduling" is
-  enforced unconditionally.
+- **`start_cmd`/`post_hooks` are not sandboxed by the unit file at
+  all.** `apexdaemon.service` carries no systemd hardening directives,
+  unlike GhostPort's units — not an oversight, a verified
+  incompatibility with this specific machine. Every directive that
+  would otherwise be a safe default for a `--user` unit
+  (`NoNewPrivileges`, `LockPersonality`, `RestrictRealtime`,
+  `ProtectKernelTunables`, `ProtectKernelModules`,
+  `ProtectControlGroups`) was tried individually and broke this host's
+  `ssh` outright: this machine routes every `ssh` invocation through a
+  setuid-root `firejail` wrapper (`/usr/local/bin/ssh -> firejail`),
+  which `repo_housekeeping`'s `git fetch` and `vault_backup`'s `git
+  push` both depend on, and firejail cannot run once the kernel's
+  `NoNewPrivs` bit is set (forced by any unprivileged seccomp filter,
+  confirmed via `/proc/self/status`, regardless of what
+  `NoNewPrivileges=` itself is set to) or once the unit has its own
+  private mount namespace (forced by the `Protect*` directives, which
+  breaks firejail's internal root-ownership checks a different way).
+  Breaking every git operation this daemon exists to do would be a
+  worse outcome than the hardening these directives buy on a
+  single-user desktop. See `apexdaemon.service`'s own comment for the
+  exact directive-by-directive test results. Untested: whether a
+  `--system` unit (with real `CAP_SYS_ADMIN`) would avoid this —
+  ApexDaemon runs as a `--user` unit by design, and switching that to
+  work around this host's `ssh` wrapper wasn't judged worth the
+  architecture change.
 
 ## Supported deployment model
 
