@@ -10,5 +10,37 @@ Restart=on-failure
 RestartSec=5
 TimeoutStopSec=10
 
+# Sandboxing, deliberately bounded. Unlike ghostport-firewall's small
+# fixed footprint, this daemon's whole job is broad read/write access
+# under $HOME (vault commits, repo fetches, theme file writes) plus
+# running arbitrary user-configured shell commands (start_cmd,
+# post_hooks) whose real needs -- network access, syscalls, address
+# families -- can't be predicted ahead of time. Seccomp-based
+# restrictions carry across execve to every spawned child, not just
+# this process itself (confirmed the hard way via ghostport-firewall's
+# own AF_NETLINK requirement), so guessing here would risk silently
+# breaking a user's own hooks rather than actually hardening anything.
+#
+# Deliberately NOT applied:
+#   ProtectHome            -- would break the vault-backup/
+#                             repo-housekeeping write access that is
+#                             this daemon's actual purpose.
+#   RestrictAddressFamilies -- fleet_health's check_http shells out to
+#                             curl, and arbitrary start_cmd/post_hooks
+#                             may need real networking of their own.
+#   MemoryDenyWriteExecute  -- python3/git/gh aren't proven safe under
+#                             it, and breaking a user's own post_hooks
+#                             silently outweighs the benefit here.
+#
+# Applied for real -- true regardless of what a given start_cmd does,
+# because this process (and anything sane it spawns) never
+# legitimately needs any of these:
+NoNewPrivileges=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictRealtime=true
+
 [Install]
 WantedBy=default.target
