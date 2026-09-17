@@ -47,6 +47,20 @@ cargo build --release
 `--dry-run` logs every plugin's intended action (restart, commit, push,
 fetch, theme write) without doing it.
 
+## Contributing
+
+```bash
+./scripts/release-gates quick   # fmt/check/clippy only
+./scripts/release-gates full    # + tests + cargo-deny
+```
+
+One-time setup to run `release-gates quick` automatically before every
+commit:
+
+```bash
+git config core.hooksPath .githooks
+```
+
 ## Service
 
 Nothing this daemon does needs root, so it's a `systemd --user` service, not
