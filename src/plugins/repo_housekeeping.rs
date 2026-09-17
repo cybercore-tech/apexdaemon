@@ -131,7 +131,11 @@ fn local_status(path: &Path) -> anyhow::Result<(usize, usize, usize)> {
 
 fn ahead_behind(repo: &Repository) -> Option<(usize, usize)> {
     let head = repo.head().ok()?;
-    let branch_name = head.shorthand()?;
+    // git2 0.21 (upgraded from 0.19 to clear three real RustSec
+    // unsoundness advisories -- see deny.toml) changed `shorthand()`
+    // from `Option<&str>` to `Result<&str, Error>` -- `.ok()` keeps
+    // this function's existing "degrade to nothing to report" shape.
+    let branch_name = head.shorthand().ok()?;
     let local_oid = head.target()?;
     let branch = repo.find_branch(branch_name, BranchType::Local).ok()?;
     let upstream = branch.upstream().ok()?;
