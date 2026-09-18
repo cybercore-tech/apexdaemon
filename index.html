@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ApexDaemon</title>
+<meta name="description" content="ApexDaemon — plugin-style background automation daemon: theme sync, fleet health, security watch, vault backup, repo housekeeping.">
+<link rel="icon" type="image/svg+xml" href="assets/logo-hex-ward.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #050308;
+  --panel: #0d0817;
+  --panel-raised: #130c22;
+  --hairline: #2b1f45;
+  --cyan: #2ef1ff;
+  --magenta: #ff2ee6;
+  --purple: #9d4edd;
+  --pink: #ff5fa3;
+  --text-primary: #ece7fb;
+  --text-muted: #9c8fc2;
+  --text-dim: #4d4270;
+  --heading: #ffe4fa;
+  --font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  min-height: 100vh;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 700px 400px at 15% 0%, rgba(157,78,221,0.14), transparent 60%),
+    radial-gradient(ellipse 700px 400px at 85% 15%, rgba(255,46,230,0.10), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+main { position: relative; z-index: 1; max-width: 880px; margin: 0 auto; padding: 3.5rem 1.5rem 4rem; }
+
+.hero { text-align: center; margin-bottom: 2.5rem; }
+.hero img { width: min(420px, 90%); height: auto; }
+
+.badge-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin-bottom: 3rem; }
+.pill {
+  font-size: 0.74rem;
+  letter-spacing: 0.03em;
+  padding: 0.32rem 0.75rem;
+  border-radius: 999px;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.pill strong { color: var(--text-primary); font-weight: 600; }
+.pill.cyan { border-color: rgba(46,241,255,0.35); }
+.pill.cyan strong { color: var(--cyan); }
+.pill.magenta { border-color: rgba(255,46,230,0.35); }
+.pill.magenta strong { color: var(--magenta); }
+.pill.purple { border-color: rgba(157,78,221,0.35); }
+.pill.purple strong { color: var(--purple); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  margin-bottom: 1.75rem;
+  overflow: hidden;
+}
+.titlebar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  background: var(--panel-raised);
+  border-bottom: 1px solid var(--hairline);
+}
+.dot { width: 9px; height: 9px; border-radius: 50%; }
+.dot-magenta { background: var(--magenta); }
+.dot-purple { background: var(--purple); }
+.dot-cyan { background: var(--cyan); }
+.titlebar-text { margin-left: 0.4rem; font-size: 0.76rem; color: var(--text-muted); letter-spacing: 0.03em; }
+.panel-body { padding: 1.6rem 1.75rem; }
+
+.prompt { color: var(--cyan); font-size: 0.82rem; margin: 0 0 1rem; }
+.lede { color: var(--text-muted); font-size: 0.92rem; line-height: 1.75; max-width: 68ch; }
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.6rem 1.1rem;
+  margin-top: 1.4rem;
+}
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--void);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  font-size: 0.76rem;
+}
+.info-row span:first-child { color: var(--text-dim); }
+.info-row span.v { color: var(--cyan); font-weight: 600; }
+
+.plugin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.plugin-card {
+  background: var(--void);
+  border: 1px solid var(--hairline);
+  border-left: 3px solid var(--accent, var(--purple));
+  border-radius: 4px;
+  padding: 1rem 1.1rem;
+}
+.plugin-card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  letter-spacing: 0.01em;
+}
+.plugin-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+pre {
+  background: var(--void);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  padding: 0.9rem 1rem;
+  font-size: 0.8rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  color: var(--text-primary);
+  margin: 0 0 1.1rem;
+}
+pre:last-child { margin-bottom: 0; }
+.step-label { font-size: 0.74rem; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 0.4rem; }
+
+footer {
+  text-align: center;
+  padding: 2rem 1.5rem 3rem;
+  color: var(--text-dim);
+  font-size: 0.78rem;
+  position: relative;
+  z-index: 1;
+}
+footer a { color: var(--text-muted); text-decoration: none; }
+footer a:hover { color: var(--cyan); }
+footer .sep { margin: 0 0.6rem; opacity: 0.5; }
+</style>
+</head>
+<body>
+<main>
+  <section class="hero">
+    <img src="assets/header-stacked.svg" alt="ApexDaemon — Plugin-style background automation daemon">
+  </section>
+
+  <div class="badge-row">
+    <span class="pill cyan">RUST</span>
+    <span class="pill magenta">MIT LICENSE</span>
+    <span class="pill purple">SYSTEMD --USER</span>
+    <span class="pill">CYBERCORE ECOSYSTEM</span>
+  </div>
+
+  <div class="panel">
+    <div class="titlebar">
+      <span class="dot dot-magenta"></span><span class="dot dot-purple"></span><span class="dot dot-cyan"></span>
+      <span class="titlebar-text">overview.sys</span>
+    </div>
+    <div class="panel-body">
+      <p class="prompt">&gt; cat README.md | head</p>
+      <p class="lede">
+        Plugin-style background automation daemon. Each automation area is an
+        independent module behind one <code>Plugin</code> trait
+        (<code>src/plugin.rs</code>), individually enabled/disabled in config —
+        not dynamically loaded, just cleanly separated, since everything ships
+        and rebuilds together anyway.
+      </p>
+      <div class="info-grid" id="liveGrid">
+        <div class="info-row"><span>STARS</span><span class="v" id="stat-stars">&hellip;</span></div>
+        <div class="info-row"><span>OPEN ISSUES</span><span class="v" id="stat-issues">&hellip;</span></div>
+        <div class="info-row"><span>LAST PUSH</span><span class="v" id="stat-pushed">&hellip;</span></div>
+        <div class="info-row"><span>LICENSE</span><span class="v">MIT</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="titlebar">
+      <span class="dot dot-magenta"></span><span class="dot dot-purple"></span><span class="dot dot-cyan"></span>
+      <span class="titlebar-text">plugins.sys</span>
+    </div>
+    <div class="panel-body">
+      <p class="prompt">&gt; apexdaemon --list-plugins</p>
+      <div class="plugin-grid">
+        <div class="plugin-card" style="--accent: var(--cyan)">
+          <h3>theme-sync</h3>
+          <p>Watches <code>~/.local/state/omarchy/current</code> for a theme switch,
+             converts <code>colors.toml</code> into a cybercore CYBERGRID theme file.
+             Writes land in a dedicated <code>omarchy-live</code> family, kept
+             separate from the 72 hand-curated themes.</p>
+        </div>
+        <div class="plugin-card" style="--accent: var(--magenta)">
+          <h3>fleet-health</h3>
+          <p>Polls configured services (TCP / HTTP / systemd-unit checks) and
+             runs a <code>start_cmd</code> if one's down. Never kills or restarts
+             an existing process — start-only, alert-only otherwise.</p>
+        </div>
+        <div class="plugin-card" style="--accent: var(--purple)">
+          <h3>security</h3>
+          <p>Watches a configured systemd unit (<code>vortexwall</code> today,
+             swappable to <code>fail2ban</code> via config alone) and tails its
+             journal for ban events. Observe-and-alert only; never starts the unit.</p>
+        </div>
+        <div class="plugin-card" style="--accent: var(--pink)">
+          <h3>vault-backup</h3>
+          <p>Auto-commits a dirty vault repo on an interval, with an opt-in push.
+             Push runs with <code>GIT_TERMINAL_PROMPT=0</code> so an SSH remote
+             needing a passphrase fails fast instead of hanging a headless daemon.</p>
+        </div>
+        <div class="plugin-card" style="--accent: var(--cyan)">
+          <h3>repo-housekeeping</h3>
+          <p>Reuses cyberfleet's own repo list when present, checks local
+             dirty/ahead/behind status via <code>git2</code>, fetches
+             non-interactively, and polls a small watchlist via <code>gh</code>
+             for state changes.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="titlebar">
+      <span class="dot dot-magenta"></span><span class="dot dot-purple"></span><span class="dot dot-cyan"></span>
+      <span class="titlebar-text">install.sys</span>
+    </div>
+    <div class="panel-body">
+      <p class="step-label">1. Configure</p>
+      <pre>cp config.example.toml ~/.config/apexdaemon/config.toml</pre>
+
+      <p class="step-label">2. Try it dry</p>
+      <pre>cargo build --release
+./target/release/apexdaemon --dry-run     # see what it would do first
+./target/release/apexdaemon --list-plugins</pre>
+
+      <p class="step-label">3. Run it as a --user service (no root needed)</p>
+      <pre>systemctl --user link ~/tools/daemons/apexdaemon/apexdaemon.service
+systemctl --user enable --now apexdaemon</pre>
+    </div>
+  </div>
+
+  <footer>
+    <a href="https://github.com/darkstardevx/apexdaemon" target="_blank" rel="noopener">View on GitHub ↗</a>
+    <span class="sep">·</span>
+    <a href="https://darkstardevx.github.io" target="_blank" rel="noopener">Cybercore ecosystem ↗</a>
+  </footer>
+</main>
+
+<script>
+(function () {
+  function relTime(iso) {
+    var s = Math.max(0, (Date.now() - new Date(iso).getTime()) / 1000);
+    if (s < 60) return "just now";
+    var m = Math.floor(s / 60); if (m < 60) return m + "m ago";
+    var h = Math.floor(m / 60); if (h < 24) return h + "h ago";
+    var d = Math.floor(h / 24); if (d < 30) return d + "d ago";
+    var mo = Math.floor(d / 30); if (mo < 12) return mo + "mo ago";
+    return Math.floor(mo / 12) + "y ago";
+  }
+  fetch("https://api.github.com/repos/darkstardevx/apexdaemon", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (repo) {
+      document.getElementById("stat-stars").textContent = repo.stargazers_count;
+      document.getElementById("stat-issues").textContent = repo.open_issues_count;
+      document.getElementById("stat-pushed").textContent = relTime(repo.pushed_at);
+    })
+    .catch(function () {
+      ["stat-stars", "stat-issues", "stat-pushed"].forEach(function (id) {
+        document.getElementById(id).textContent = "—";
+      });
+    });
+})();
+</script>
+</body>
+</html>
