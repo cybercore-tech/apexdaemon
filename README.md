@@ -1,4 +1,6 @@
-# ApexDaemon
+<p align="center">
+  <img src="assets/header-stacked.svg" width="480" alt="ApexDaemon — Plugin-style background automation daemon">
+</p>
 
 Plugin-style background automation daemon. Each automation area is an
 independent module behind one `Plugin` trait (`src/plugin.rs`), individually
