@@ -2,10 +2,23 @@
   <img src="assets/header-stacked.svg" width="480" alt="ApexDaemon — Plugin-style background automation daemon">
 </p>
 
+[![CI](https://github.com/darkstardevx/apexdaemon/actions/workflows/ci.yml/badge.svg)](https://github.com/darkstardevx/apexdaemon/actions/workflows/ci.yml)
+[![Release](https://github.com/darkstardevx/apexdaemon/actions/workflows/release.yml/badge.svg)](https://github.com/darkstardevx/apexdaemon/actions/workflows/release.yml)
+
 Plugin-style background automation daemon. Each automation area is an
 independent module behind one `Plugin` trait (`src/plugin.rs`), individually
 enabled/disabled in config — not dynamically loaded, just cleanly separated,
 since everything ships and rebuilds together anyway.
+
+## 📦 Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/darkstardevx/apexdaemon/main/install.sh | sh
+```
+
+Downloads the latest release for your platform (Linux or macOS, x86_64
+or aarch64), verifies its SHA-256 checksum, and installs `apexdaemon`
+to `~/.local/bin`. Or build from source with `cargo build --release`.
 
 ## Plugins
 
