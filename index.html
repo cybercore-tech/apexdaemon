@@ -193,6 +193,7 @@ footer .sep { margin: 0 0.6rem; opacity: 0.5; }
         <div class="info-row"><span>STARS</span><span class="v" id="stat-stars">&hellip;</span></div>
         <div class="info-row"><span>OPEN ISSUES</span><span class="v" id="stat-issues">&hellip;</span></div>
         <div class="info-row"><span>LAST PUSH</span><span class="v" id="stat-pushed">&hellip;</span></div>
+        <div class="info-row"><span>DOWNLOADS</span><span class="v" id="stat-downloads">&hellip;</span></div>
         <div class="info-row"><span>LICENSE</span><span class="v">MIT</span></div>
       </div>
     </div>
@@ -291,6 +292,18 @@ systemctl --user enable --now apexdaemon</pre>
       ["stat-stars", "stat-issues", "stat-pushed"].forEach(function (id) {
         document.getElementById(id).textContent = "—";
       });
+    });
+
+  fetch("https://api.github.com/repos/darkstardevx/apexdaemon/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (rel) {
+      var dl = (rel.assets || [])
+        .filter(function (a) { return !a.name.endsWith(".sha256"); })
+        .reduce(function (sum, a) { return sum + (a.download_count || 0); }, 0);
+      document.getElementById("stat-downloads").textContent = dl.toLocaleString();
+    })
+    .catch(function () {
+      document.getElementById("stat-downloads").textContent = "—";
     });
 })();
 </script>
