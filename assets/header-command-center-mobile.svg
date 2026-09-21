@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="820" height="520" viewBox="0 0 820 520" role="img" aria-labelledby="title desc">
+  <title id="title">ApexDaemon mobile command center</title>
+  <desc id="desc">ApexDaemon — local automation, service health, and validation</desc>
+  <defs>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06151d" stop-opacity=".74"/><stop offset="1" stop-color="#07101a" stop-opacity=".88"/></linearGradient>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4DE7D4"/><stop offset=".52" stop-color="#F4B35E"/><stop offset="1" stop-color="#A887FF"/></linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="5" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <image href="apexdaemon-command-field.png" x="0" y="0" width="820" height="520" preserveAspectRatio="xMidYMid slice" opacity=".72"/>
+  <rect width="820" height="520" fill="url(#wash)"/>
+  <rect x="1" y="1" width="818" height="518" rx="10" fill="none" stroke="#2B6770" stroke-opacity=".82"/>
+  <g transform="translate(280 38)">
+    <polygon points="130,0 245,66 245,198 130,264 15,198 15,66" fill="#06151D" fill-opacity=".92" stroke="#4DE7D4" stroke-width="4"/>
+    <polygon points="130,34 211,81 211,183 130,230 49,183 49,81" fill="none" stroke="#226C78" stroke-width="3"/>
+    <path d="M76 173 L130 103 L184 173" fill="none" stroke="url(#signal)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+    <circle cx="130" cy="103" r="8" fill="#F4B35E" filter="url(#glow)"/>
+  </g>
+  <g fill="#F3F8F6" font-family="'JetBrains Mono','Cascadia Code',monospace" text-anchor="middle">
+    <text x="410" y="355" font-size="48" font-weight="700" letter-spacing="4">APEXDAEMON</text>
+    <text x="410" y="386" fill="#9ED8D0" font-size="14" letter-spacing="1.7">LOCAL AUTOMATION / SERVICE HEALTH / VALIDATION</text>
+  </g>
+  <g transform="translate(82 432)" font-family="'JetBrains Mono','Cascadia Code',monospace">
+    <path d="M0 0 H656" stroke="#2B6770"/>
+    <path d="M0 0 H265" stroke="url(#signal)" stroke-width="3"/>
+    <circle cx="265" cy="0" r="4" fill="#F4B35E" filter="url(#glow)"/>
+    <text x="0" y="28" fill="#78BEB8" font-size="11" letter-spacing="1.4">OBSERVE  /  REMIND  /  RECOVER</text>
+    <text x="492" y="28" fill="#78BEB8" font-size="11" letter-spacing="1.2">CYBERCORE / 0.1</text>
+  </g>
+</svg>

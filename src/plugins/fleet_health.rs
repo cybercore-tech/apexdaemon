@@ -6,7 +6,7 @@
 //! A hung-but-still-listening process is out of scope here; only "nothing
 //! answered on the configured check" triggers a start attempt.
 
-use crate::config::{HealthCheck, WatchedService};
+use crate::config::{HealthCheck, UnitScope, WatchedService};
 use crate::plugin::{tick_forever, Context, Plugin};
 use std::future::Future;
 use std::pin::Pin;
@@ -45,7 +45,7 @@ async fn check_one(ctx: &Context, svc: &WatchedService) {
     let healthy = match &svc.check {
         HealthCheck::Tcp { addr } => check_tcp(addr).await,
         HealthCheck::Http { url } => check_http(url).await,
-        HealthCheck::SystemdUnit { unit } => check_systemd_unit(unit).await,
+        HealthCheck::SystemdUnit { unit, scope } => check_systemd_unit(unit, scope).await,
     };
 
     if healthy {
@@ -133,10 +133,17 @@ async fn check_http(url: &str) -> bool {
         .unwrap_or(false)
 }
 
-async fn check_systemd_unit(unit: &str) -> bool {
-    // Read-only status query — works against a system unit without sudo.
-    tokio::process::Command::new("systemctl")
-        .args(["is-active", "--quiet", unit])
+async fn check_systemd_unit(unit: &str, scope: &UnitScope) -> bool {
+    // Read-only status query — works without sudo either way. `--user`
+    // queries the invoking user's own session manager, a completely
+    // separate unit namespace from the system manager plain `systemctl`
+    // talks to; a unit installed in one scope never shows as active when
+    // queried in the other.
+    let mut cmd = tokio::process::Command::new("systemctl");
+    if *scope == UnitScope::User {
+        cmd.arg("--user");
+    }
+    cmd.args(["is-active", "--quiet", unit])
         .status()
         .await
         .map(|s| s.success())

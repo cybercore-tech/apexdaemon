@@ -1,6 +1,7 @@
 # Copy to ~/.config/apexdaemon/config.toml and edit. Every field shown
-# here is also the built-in default — an absent file, or an empty one,
-# runs every plugin with these same values.
+# here is also the built-in default. An absent file, or an empty one, runs
+# the established plugins with those defaults; the dotfiles doctor stays
+# opt-in until its manifests have been reviewed.
 
 [general]
 notify = true   # desktop notifications via notify-send, best-effort
@@ -11,6 +12,9 @@ fleet_health = true
 security = true
 vault_backup = true
 repo_housekeeping = true
+dotfiles = false   # enable after creating the two explicit manifests
+profiles = false   # enable after creating an active machine profile
+validation = false # enable local asset checks and read-only CI reminders
 
 [theme_sync]
 cybercore_root = "~/.sysops/cybercore"
@@ -73,3 +77,48 @@ roots = []   # fallback only, used if cyberfleet_config doesn't exist
 watch_prs = [
   # "darkstardevx/OmNote#4",
 ]
+
+# Slice 1: read-only public/private dotfiles doctor. It checks manifests,
+# bare-repo working-tree status, tracked files outside the manifest, and
+# high-confidence secret patterns. It never commits, pushes, checks out, or
+# rewrites $HOME. Keep auto_commit/auto_push false until a later slice adds
+# an explicit approval flow.
+[dotfiles]
+interval_secs = 300
+auto_commit = false
+auto_push = false
+public_git_dir = "~/.dotfiles"
+private_git_dir = "~/.dotfiles-private"
+public_manifest = "~/.config/apexdaemon/public-files.list"
+private_manifest = "~/.config/apexdaemon/private-files.list"
+snapshot_dir = "~/.local/state/apexdaemon/dotfiles-snapshots"
+max_snapshots = 10
+
+[dotfiles.security]
+scan_secrets = true
+exclude = [
+  "Vaults/",
+  "*.pem",
+  "*.key",
+]
+
+[profiles]
+interval_secs = 300
+active = "darkbox"
+directory = "~/.config/apexdaemon/profiles"
+remind_on_mismatch = true
+
+# Slice 3: read-only validation for manifest-listed shell/TOML/Lua/SVG/
+# Markdown assets, plus optional latest-run status through the authenticated
+# GitHub CLI. It never commits, pushes, dispatches, reruns, or publishes.
+[validation]
+interval_secs = 3600
+check_shell = true
+check_toml = true
+check_lua = true
+check_svg = true
+check_readme_links = true
+watch_ci = false
+notify_success = false
+workflow = "ci.yml"
+repositories = []

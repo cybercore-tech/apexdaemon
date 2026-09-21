@@ -14,7 +14,7 @@ use std::time::Duration;
 #[command(
     name = "apexdaemon",
     version = "0.1.0",
-    about = "Plugin-style background automation: theme sync, fleet health, security watch, vault backup, repo housekeeping"
+    about = "Plugin-style background automation: theme sync, fleet health, security watch, vault backup, repo housekeeping, dotfiles doctor, profiles, validation"
 )]
 struct Args {
     /// Path to config.toml. Defaults to $XDG_CONFIG_HOME/apexdaemon/config.toml,
@@ -31,6 +31,15 @@ struct Args {
     /// Print the registered plugins and whether each is enabled, then exit.
     #[arg(long)]
     list_plugins: bool,
+
+    /// Create a local dotfiles snapshot and exit.
+    #[arg(long, conflicts_with = "dotfiles_rollback")]
+    dotfiles_snapshot: bool,
+
+    /// Restore a named local dotfiles snapshot and exit. This never deletes
+    /// files absent from the snapshot and never pushes remotely.
+    #[arg(long, value_name = "SNAPSHOT", conflicts_with = "dotfiles_snapshot")]
+    dotfiles_rollback: Option<String>,
 
     // --- systemd --user service control, same convention as
     // wraithflow/vortexwall's --admin flag ---
@@ -108,6 +117,32 @@ async fn main() -> ExitCode {
         }
     };
 
+    if args.dotfiles_snapshot || args.dotfiles_rollback.is_some() {
+        let result = if args.dotfiles_snapshot {
+            plugins::dotfiles::create_snapshot(
+                &app_config.dotfiles,
+                &app_config.profiles.active,
+                args.dry_run,
+            )
+        } else {
+            plugins::dotfiles::rollback_snapshot(
+                &app_config.dotfiles,
+                args.dotfiles_rollback.as_deref().unwrap_or_default(),
+                args.dry_run,
+            )
+        };
+        return match result {
+            Ok(message) => {
+                println!("{message}");
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("[dotfiles] {e:#}");
+                ExitCode::FAILURE
+            }
+        };
+    }
+
     let state_path = config::expand_home("~/.local/state/apexdaemon/state.json");
     let ctx = Context {
         config: Arc::new(app_config.clone()),
@@ -136,6 +171,18 @@ async fn main() -> ExitCode {
         (
             app_config.plugins.repo_housekeeping,
             Arc::new(plugins::repo_housekeeping::RepoHousekeepingPlugin),
+        ),
+        (
+            app_config.plugins.dotfiles,
+            Arc::new(plugins::dotfiles::DotfilesPlugin),
+        ),
+        (
+            app_config.plugins.profiles,
+            Arc::new(plugins::profiles::ProfilesPlugin),
+        ),
+        (
+            app_config.plugins.validation,
+            Arc::new(plugins::validation::ValidationPlugin),
         ),
     ];
 

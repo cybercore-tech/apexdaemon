@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1240" height="280" viewBox="0 0 1240 280" role="img" aria-labelledby="title desc">
+  <title id="title">ApexDaemon command center</title>
+  <desc id="desc">ApexDaemon — a quiet control plane for local automation</desc>
+  <defs>
+    <linearGradient id="wash" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06151d" stop-opacity=".70"/>
+      <stop offset=".55" stop-color="#06131a" stop-opacity=".30"/>
+      <stop offset="1" stop-color="#07101a" stop-opacity=".80"/>
+    </linearGradient>
+    <linearGradient id="signal" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#4DE7D4"/>
+      <stop offset=".52" stop-color="#F4B35E"/>
+      <stop offset="1" stop-color="#A887FF"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <image href="apexdaemon-command-field.png" x="0" y="0" width="1240" height="280" preserveAspectRatio="xMidYMid slice" opacity=".86"/>
+  <rect width="1240" height="280" fill="url(#wash)"/>
+  <rect x="1" y="1" width="1238" height="278" rx="10" fill="none" stroke="#2B6770" stroke-opacity=".82"/>
+
+  <g transform="translate(54 47)">
+    <polygon points="78,0 146,39 146,117 78,156 10,117 10,39" fill="#06151D" fill-opacity=".90" stroke="#4DE7D4" stroke-width="3"/>
+    <polygon points="78,20 128,49 128,107 78,136 28,107 28,49" fill="none" stroke="#226C78" stroke-width="2"/>
+    <path d="M45 102 L78 61 L111 102" fill="none" stroke="url(#signal)" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+    <circle cx="78" cy="61" r="5" fill="#F4B35E" filter="url(#glow)"/>
+  </g>
+
+  <g fill="#F3F8F6" font-family="'JetBrains Mono','Cascadia Code',monospace">
+    <text x="252" y="103" font-size="54" font-weight="700" letter-spacing="5">APEXDAEMON</text>
+    <text x="255" y="136" fill="#9ED8D0" font-size="16" letter-spacing="2.1">A QUIET CONTROL PLANE FOR YOUR MACHINE</text>
+  </g>
+
+  <g transform="translate(938 50)" font-family="'JetBrains Mono','Cascadia Code',monospace">
+    <rect width="244" height="142" rx="8" fill="#06151D" fill-opacity=".84" stroke="#2B6770"/>
+    <text x="18" y="28" fill="#F4B35E" font-size="11" letter-spacing="1.8">RUNTIME / ONLINE</text>
+    <circle cx="210" cy="23" r="5" fill="#4DE7D4" filter="url(#glow)"/>
+    <path d="M18 51 H226" stroke="#2B6770"/>
+    <text x="18" y="78" fill="#E2F2EE" font-size="14">08 PLUGINS</text>
+    <text x="18" y="102" fill="#E2F2EE" font-size="14">READ-ONLY GUARDRAILS</text>
+    <text x="18" y="126" fill="#9ED8D0" font-size="11">observe  /  remind  /  recover</text>
+  </g>
+
+  <g transform="translate(252 203)" font-family="'JetBrains Mono','Cascadia Code',monospace">
+    <path d="M0 0 H930" stroke="#2B6770" stroke-width="1"/>
+    <path d="M0 0 H410" stroke="url(#signal)" stroke-width="3"/>
+    <circle cx="410" cy="0" r="4" fill="#F4B35E" filter="url(#glow)"/>
+    <text x="0" y="31" fill="#78BEB8" font-size="11" letter-spacing="1.6">THE LOCAL AUTOMATION LAYER</text>
+    <text x="728" y="31" fill="#78BEB8" font-size="11" letter-spacing="1.4">CYBERCORE / 0.1</text>
+  </g>
+</svg>
