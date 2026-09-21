@@ -133,6 +133,7 @@ h3 { margin-bottom: 8px; color: var(--text); font-size: 15px; }
         <div class="signal" style="--accent:var(--amber)"><span class="label">POSTURE</span><span class="value">GUARDED</span></div>
         <div class="signal" style="--accent:var(--violet)"><span class="label">ROOT</span><span class="value">NOT REQUIRED</span></div>
         <div class="signal" style="--accent:var(--cyan)"><span class="label">CONTROL</span><span class="value ok">LOCAL FIRST</span></div>
+        <div class="signal" style="--accent:var(--amber)"><span class="label">DOWNLOADS</span><span class="value" id="stat-downloads">—</span></div>
       </div>
     </div>
   </section>
@@ -201,5 +202,21 @@ h3 { margin-bottom: 8px; color: var(--text); font-size: 15px; }
     <p>MIT licensed · Cybercore systems tooling · built for a quiet machine</p>
   </footer>
 </main>
+
+<script>
+(function () {
+  fetch("https://api.github.com/repos/darkstardevx/apexdaemon/releases/latest", { headers: { Accept: "application/vnd.github+json" } })
+    .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function (rel) {
+      var dl = (rel.assets || [])
+        .filter(function (a) { return !a.name.endsWith(".sha256"); })
+        .reduce(function (sum, a) { return sum + (a.download_count || 0); }, 0);
+      document.getElementById("stat-downloads").textContent = dl.toLocaleString();
+    })
+    .catch(function () {
+      document.getElementById("stat-downloads").textContent = "—";
+    });
+})();
+</script>
 </body>
 </html>
