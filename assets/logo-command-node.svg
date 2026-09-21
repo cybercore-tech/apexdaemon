@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-labelledby="title desc">
+  <title id="title">ApexDaemon command node</title>
+  <desc id="desc">A cyan and amber hexagonal automation node</desc>
+  <defs>
+    <linearGradient id="signal" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#4DE7D4"/>
+      <stop offset=".55" stop-color="#F4B35E"/>
+      <stop offset="1" stop-color="#A887FF"/>
+    </linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="7" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="256" height="256" fill="#06131A"/>
+  <polygon points="128,18 220,71 220,185 128,238 36,185 36,71" fill="#081B24" stroke="#4DE7D4" stroke-width="4"/>
+  <polygon points="128,43 198,83 198,173 128,213 58,173 58,83" fill="none" stroke="#215A66" stroke-width="3"/>
+  <path d="M83 166 L128 108 L173 166" fill="none" stroke="url(#signal)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+  <circle cx="128" cy="108" r="8" fill="#F4B35E" filter="url(#glow)"/>
+  <path d="M78 64 H178 M78 192 H178" stroke="#2B6770" stroke-width="2" stroke-dasharray="4 8"/>
+</svg>

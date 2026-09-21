@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="720" height="250" viewBox="0 0 720 250" role="img" aria-labelledby="title desc">
+  <title id="title">Observe</title><desc id="desc">ApexDaemon service and repository observation card</desc>
+  <rect x="1" y="1" width="718" height="248" rx="10" fill="#071820" stroke="#2B6770"/>
+  <path d="M28 40 H692" stroke="#1E4D58"/>
+  <circle cx="30" cy="25" r="5" fill="#4DE7D4"/><circle cx="48" cy="25" r="5" fill="#F4B35E"/><circle cx="66" cy="25" r="5" fill="#A887FF"/>
+  <g font-family="'JetBrains Mono','Cascadia Code',monospace"><text x="30" y="78" fill="#F4B35E" font-size="13" letter-spacing="2">01 / OBSERVE</text><text x="30" y="116" fill="#F3F8F6" font-size="24" font-weight="700">Know what moved.</text><text x="30" y="154" fill="#9ED8D0" font-size="15">fleet health  ·  security journal</text><text x="30" y="184" fill="#9ED8D0" font-size="15">repo drift  ·  CI signals</text><text x="560" y="212" fill="#4DE7D4" font-size="12">READ ONLY</text></g>
+</svg>
