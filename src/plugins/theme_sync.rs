@@ -57,18 +57,60 @@ struct ThemeGenInput {
 struct OmarchyColors {
     background: String,
     foreground: String,
-    cursor: String,
+    #[serde(default)]
+    cursor: Option<String>,
     #[serde(flatten)]
     extra: std::collections::HashMap<String, String>,
 }
 
 impl OmarchyColors {
+    fn color(&self, key: &str) -> Option<&str> {
+        match key {
+            "background" => Some(&self.background),
+            "foreground" => Some(&self.foreground),
+            _ => self.extra.get(key).map(String::as_str),
+        }
+    }
+
+    fn cursor_color(&self) -> String {
+        self.cursor
+            .clone()
+            .unwrap_or_else(|| self.foreground.clone())
+    }
+
     fn ansi16(&self) -> anyhow::Result<Vec<String>> {
-        (0..16)
-            .map(|i| {
+        // Omarchy's generated colors.toml includes explicit ANSI slots, but
+        // hand-authored themes commonly provide only semantic names. Prefer
+        // explicit slots and fall back to the equivalent semantic palette so
+        // both valid forms can feed the Cybercore converter.
+        let semantic: &[&[&str]] = &[
+            &["background"],
+            &["red"],
+            &["green"],
+            &["yellow"],
+            &["blue"],
+            &["magenta"],
+            &["cyan"],
+            &["foreground"],
+            &["dark_foreground", "muted", "background"],
+            &["bright_red", "red"],
+            &["bright_green", "green"],
+            &["bright_yellow", "yellow"],
+            &["bright_blue", "blue"],
+            &["bright_magenta", "magenta"],
+            &["bright_cyan", "cyan"],
+            &["bright_foreground", "foreground"],
+        ];
+
+        semantic
+            .iter()
+            .enumerate()
+            .map(|(i, candidates)| {
                 self.extra
                     .get(&format!("color{i}"))
-                    .cloned()
+                    .map(String::as_str)
+                    .or_else(|| candidates.iter().find_map(|key| self.color(key)))
+                    .map(str::to_owned)
                     .ok_or_else(|| anyhow::anyhow!("colors.toml missing color{i}"))
             })
             .collect()
@@ -77,6 +119,43 @@ impl OmarchyColors {
 
 fn state_theme_dir() -> PathBuf {
     expand_home("~/.local/state/omarchy/current")
+}
+
+/// Read the active palette after Omarchy has finished replacing it.
+///
+/// `omarchy theme set` swaps the current theme directory into place and emits
+/// several filesystem events while the new files are still being written. A
+/// watcher callback can therefore observe a syntactically valid but incomplete
+/// `colors.toml` (for example, just `mode = "dark"`). Retrying here keeps that
+/// transient state out of the sync path without hiding a genuinely malformed
+/// or incomplete theme after the bounded window expires.
+async fn read_colors_when_ready(path: &std::path::Path) -> anyhow::Result<OmarchyColors> {
+    const ATTEMPTS: usize = 12;
+    const RETRY_DELAY: Duration = Duration::from_millis(100);
+
+    let mut last_error = None;
+    for attempt in 0..ATTEMPTS {
+        let result = std::fs::read_to_string(path)
+            .map_err(anyhow::Error::from)
+            .and_then(|raw| toml::from_str::<OmarchyColors>(&raw).map_err(anyhow::Error::from))
+            .and_then(|colors| {
+                // Validate the complete shape here as well as in the caller so
+                // partially written ANSI slots get the same retry treatment.
+                colors.ansi16().map(|_| colors)
+            });
+
+        match result {
+            Ok(colors) => return Ok(colors),
+            Err(error) => {
+                last_error = Some(error);
+                if attempt + 1 < ATTEMPTS {
+                    tokio::time::sleep(RETRY_DELAY).await;
+                }
+            }
+        }
+    }
+
+    Err(last_error.expect("at least one read attempt must run"))
 }
 
 async fn run(ctx: Context) -> anyhow::Result<()> {
@@ -138,13 +217,12 @@ async fn sync_once(ctx: &Context) -> anyhow::Result<()> {
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|_| "omarchy-live".to_string());
 
-    let raw = std::fs::read_to_string(&colors_path)?;
-    let colors: OmarchyColors = toml::from_str(&raw)?;
+    let colors = read_colors_when_ready(&colors_path).await?;
     let input = ThemeGenInput {
         name: name.clone(),
         background: colors.background.clone(),
         foreground: colors.foreground.clone(),
-        cursor: colors.cursor.clone(),
+        cursor: colors.cursor_color(),
         colors: colors.ansi16()?,
     };
 
@@ -266,5 +344,35 @@ mod tests {
         "##;
         let colors: OmarchyColors = toml::from_str(raw).unwrap();
         assert!(colors.ansi16().is_err());
+    }
+
+    #[test]
+    fn semantic_only_theme_gets_cursor_and_ansi_fallbacks() {
+        let raw = r##"
+            background = "#080c09"
+            foreground = "#8bc98c"
+            muted = "#3a6840"
+            red = "#a83a3a"
+            green = "#2d9a48"
+            yellow = "#b8ba48"
+            blue = "#3d8f68"
+            magenta = "#5a7a58"
+            cyan = "#4bb56a"
+            bright_red = "#d05050"
+            bright_green = "#5ccc70"
+            bright_yellow = "#d8dc70"
+            bright_blue = "#71b895"
+            bright_magenta = "#86a984"
+            bright_cyan = "#75d58e"
+            bright_foreground = "#c5e6c6"
+        "##;
+        let colors: OmarchyColors = toml::from_str(raw).unwrap();
+        assert_eq!(colors.cursor_color(), "#8bc98c");
+        let ansi = colors.ansi16().unwrap();
+        assert_eq!(ansi.len(), 16);
+        assert_eq!(ansi[0], "#080c09");
+        assert_eq!(ansi[7], "#8bc98c");
+        assert_eq!(ansi[8], "#3a6840");
+        assert_eq!(ansi[15], "#c5e6c6");
     }
 }
