@@ -180,6 +180,14 @@ apexdaemon --admin --status
 
 The project also ships CI for formatting, Clippy, tests, and supply-chain checks, plus a release workflow for Linux and macOS binaries.
 
+## Contribution standard
+
+Every pushed commit must explicitly document what changed, why it changed,
+how it behaves (including safety boundaries and failure paths), and how it was
+validated. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the required commit
+body format. Historical commit messages are preserved; this standard applies
+to new work.
+
 ## Asset pack
 
 The visual system lives under [`assets/`](assets/):
