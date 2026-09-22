@@ -64,6 +64,33 @@ The dry-run reports intended actions without restarting services, committing, pu
 - `profiles` — validates machine identity and manifest wiring, then reminds on mismatch.
 - `validation` — checks local assets and GitHub Actions workflow state; it never dispatches, reruns, commits, pushes, or publishes.
 
+### Omarchy theme-sync details
+
+The `theme-sync` plugin watches Omarchy's active theme at
+`~/.local/state/omarchy/current/theme/colors.toml` and writes generated
+Cybercore JSON into the isolated `omarchy-live` family. It is deliberately
+safe to run alongside hand-curated Cybercore themes: it does not overwrite
+those themes, and it does not modify the Omarchy installation itself.
+
+Two details matter when authoring or switching themes:
+
+- Omarchy replaces the active theme directory in several filesystem steps.
+  ApexDaemon waits for a complete palette before syncing, so the transient
+  `mode = "dark"` file seen during a switch is ignored rather than reported
+  as a real parse failure.
+- Both palette shapes are supported: generated themes with `cursor` and
+  `color0` through `color15`, and semantic-only themes such as `background`,
+  `foreground`, `red`, `green`, and their bright variants. Missing cursor and
+  ANSI slots are derived from the semantic colors; genuinely incomplete files
+  still fail after the bounded retry window.
+
+After a successful sync, running Cybercore consumers must still be rebuilt to
+embed the new theme data. To inspect sync activity:
+
+```bash
+journalctl --user -u apexdaemon.service -f
+```
+
 ## Configuration
 
 ```bash
