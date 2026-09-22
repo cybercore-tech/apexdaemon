@@ -72,6 +72,10 @@ Cybercore JSON into the isolated `omarchy-live` family. It is deliberately
 safe to run alongside hand-curated Cybercore themes: it does not overwrite
 those themes, and it does not modify the Omarchy installation itself.
 
+The incident that motivated the current implementation is documented in
+[`docs/THEME-SYNC.md`](docs/THEME-SYNC.md), including the original error,
+root cause, exact recovery behavior, and verification procedure.
+
 Two details matter when authoring or switching themes:
 
 - Omarchy replaces the active theme directory in several filesystem steps.
