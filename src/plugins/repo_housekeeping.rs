@@ -268,14 +268,14 @@ mod tests {
     #[test]
     fn parses_owner_repo_hash_number() {
         assert_eq!(
-            parse_watch_spec("darkstardevx/OmNote#4"),
-            Some(("darkstardevx/OmNote", "4"))
+            parse_watch_spec("cybercore-tech/OmNote#4"),
+            Some(("cybercore-tech/OmNote", "4"))
         );
     }
 
     #[test]
     fn rejects_spec_without_hash() {
-        assert_eq!(parse_watch_spec("darkstardevx/OmNote"), None);
+        assert_eq!(parse_watch_spec("cybercore-tech/OmNote"), None);
     }
 
     #[test]

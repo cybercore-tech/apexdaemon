@@ -400,10 +400,10 @@ mod tests {
 
     #[test]
     fn repository_names_are_constrained() {
-        assert!(is_safe_repository("darkstardevx/apexdaemon"));
-        assert!(!is_safe_repository("darkstardevx"));
-        assert!(!is_safe_repository("darkstardevx/apexdaemon/extra"));
-        assert!(!is_safe_repository("darkstardevx/../../secret"));
+        assert!(is_safe_repository("cybercore-tech/apexdaemon"));
+        assert!(!is_safe_repository("cybercore-tech"));
+        assert!(!is_safe_repository("cybercore-tech/apexdaemon/extra"));
+        assert!(!is_safe_repository("cybercore-tech/../../secret"));
     }
 
     #[test]

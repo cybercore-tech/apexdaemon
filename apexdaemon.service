@@ -1,6 +1,6 @@
 [Unit]
 Description=ApexDaemon — plugin-style background automation
-Documentation=https://github.com/darkstardevx/apexdaemon
+Documentation=https://github.com/cybercore-tech/apexdaemon
 After=graphical-session.target
 
 [Service]

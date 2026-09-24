@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Install ApexDaemon from the latest GitHub release.
 #
-#   curl -fsSL https://raw.githubusercontent.com/darkstardevx/apexdaemon/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/cybercore-tech/apexdaemon/main/install.sh | sh
 #
 # Supported: Linux (x86_64, aarch64) and macOS (x86_64, aarch64).
 set -eu
 
-REPO="darkstardevx/apexdaemon"
+REPO="cybercore-tech/apexdaemon"
 INSTALL_DIR="${APEXDAEMON_INSTALL_DIR:-$HOME/.local/bin}"
 
 die() {

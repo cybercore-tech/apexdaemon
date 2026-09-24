@@ -6,9 +6,9 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/darkstardevx/apexdaemon/actions/workflows/ci.yml"><img src="https://github.com/darkstardevx/apexdaemon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <a href="https://github.com/darkstardevx/apexdaemon/actions/workflows/release.yml"><img src="https://github.com/darkstardevx/apexdaemon/actions/workflows/release.yml/badge.svg" alt="Release"></a>
-  <a href="https://github.com/darkstardevx/apexdaemon/releases"><img src="https://img.shields.io/github/v/release/darkstardevx/apexdaemon?label=latest%20release&color=F4B35E" alt="Latest release"></a>
+  <a href="https://github.com/cybercore-tech/apexdaemon/actions/workflows/ci.yml"><img src="https://github.com/cybercore-tech/apexdaemon/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/cybercore-tech/apexdaemon/actions/workflows/release.yml"><img src="https://github.com/cybercore-tech/apexdaemon/actions/workflows/release.yml/badge.svg" alt="Release"></a>
+  <a href="https://github.com/cybercore-tech/apexdaemon/releases"><img src="https://img.shields.io/github/v/release/cybercore-tech/apexdaemon?label=latest%20release&color=F4B35E" alt="Latest release"></a>
 </p>
 
 <p align="center">
@@ -33,7 +33,7 @@ ApexDaemon is deliberately small at the center and broad at the edges. Each auto
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/darkstardevx/apexdaemon/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/cybercore-tech/apexdaemon/main/install.sh | sh
 ```
 
 The installer downloads the latest release for Linux or macOS on x86_64 or aarch64, verifies its SHA-256 checksum, and installs `apexdaemon` to `~/.local/bin`.
@@ -122,7 +122,7 @@ auto_push = false
 interval_secs = 3600
 watch_ci = true
 workflow = "ci.yml"
-repositories = ["darkstardevx/apexdaemon"]
+repositories = ["cybercore-tech/apexdaemon"]
 notify_success = false
 ```
 

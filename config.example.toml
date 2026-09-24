@@ -75,7 +75,7 @@ interval_secs = 3600
 cyberfleet_config = "~/.config/cyberfleet/config.json"   # reused if present
 roots = []   # fallback only, used if cyberfleet_config doesn't exist
 watch_prs = [
-  # "darkstardevx/OmNote#4",
+  # "cybercore-tech/OmNote#4",
 ]
 
 # Slice 1: read-only public/private dotfiles doctor. It checks manifests,
